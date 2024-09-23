@@ -1,38 +1,41 @@
-
 pipeline {
     agent any
-
+    tools {
+        maven 'Maven3.9.9'  // Ensure Maven is installed
+        jdk 'JDK11'     // Ensure JDK is installed
+    }
     stages {
-        stage('Checkout') {
+        stage('Checkout Code') {
             steps {
-                git 'https://github.com/aliisaro/TimeCalculator'
+                git 'https://github.com/aliisaro/TimeCalculator.git'
             }
         }
-
         stage('Build') {
             steps {
-                bat 'mvn clean install'
+                bat 'mvn clean package'
             }
         }
-
-        stage('Test') {
+        stage('Run Unit Tests') {
             steps {
                 bat 'mvn test'
             }
+            post {
+                always {
+                    junit 'target/surefire-reports/*.xml'  // Capture test reports
+                }
+            }
         }
-
-        stage('Code Coverage') {
+        stage('Code Coverage Report') {
             steps {
-                jacoco execPattern: '**/target/jacoco.exec'
+                bat 'mvn jacoco:report'
+            }
+            post {
+                always {
+                    jacoco execPattern: 'target/jacoco.exec'
+                }
             }
         }
     }
-
-    post {
-        always {
-            junit '**/target/surefire-reports/*.xml'
-            jacoco execPattern: '**/target/jacoco.exec'
-        }
-    }
 }
+
 
